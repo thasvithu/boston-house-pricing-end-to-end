@@ -1,0 +1,9 @@
+# Ignore local/dev files in Docker context
+.venv
+__pycache__
+.ipynb_checkpoints
+*.pyc
+*.pyo
+.git
+.gitignore
+.github
