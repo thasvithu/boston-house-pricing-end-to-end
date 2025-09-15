@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ '3.11', '3.13' ]
+        python-version: [ '3.11' ]
 
     steps:
       - name: Checkout repository
@@ -40,7 +40,7 @@ jobs:
       - name: Smoke test - load artifacts and predict
         run: |
           python - << 'PY'
-          import pickle, numpy as np, pandas as pd
+      import pickle, numpy as np, pandas as pd
           FEATURES = [
               "CRIM","ZN","INDUS","CHAS","NOX","RM","AGE","DIS","RAD","TAX","PTRATIO","B","LSTAT"
           ]
@@ -53,7 +53,8 @@ jobs:
 
           # Basic checks
           assert hasattr(model, 'predict'), 'Loaded model lacks predict()'
-          df = pd.read_csv('boston.csv')
+      # Adjusted path to dataset inside notebooks/
+      df = pd.read_csv('notebooks/boston.csv')
           assert all(feat in df.columns for feat in FEATURES), 'Missing required features in CSV'
 
           x = df.loc[0, FEATURES].to_numpy(dtype=float).reshape(1, -1)

@@ -25,8 +25,9 @@ This project predicts Boston house prices using 13 classic features from the Bos
 ```
 .
 ├─ app.py                       # Flask app: UI + JSON API
-├─ boston.csv                   # Dataset
-├─ Boston House Price Prediction.ipynb  # From-scratch EDA + training
+├─ notebooks/
+│  ├─ boston.csv               # Dataset
+│  └─ Boston House Price Prediction.ipynb  # From-scratch EDA + training
 ├─ regression.pkl               # Trained Linear Regression model
 ├─ scaling.pkl                  # Trained StandardScaler
 ├─ Templates/
@@ -135,6 +136,24 @@ Open `Boston House Price Prediction.ipynb` and run top-to-bottom:
 7. Persistence (writes `scaling.pkl` and `regression.pkl`)
 
 To refresh artifacts, re-run the notebook and re-launch the app.
+
+## Deploying on AWS
+
+Two supported paths are included in this repo. Pick one:
+
+1) Elastic Beanstalk (Python platform, no Docker required)
+- Ensure these files exist (they do in this repo): `application.py`, `.ebextensions/python.config`, `Procfile`.
+- Create an EB app and environment (Python 3.11). Set environment variable `SECRET_KEY` in EB > Configuration > Software (optional).
+- Deploy using GitHub Actions workflow `.github/workflows/deploy-eb.yaml` by configuring repo secrets:
+	- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `EB_APP_NAME`, `EB_ENV_NAME`.
+	- Then push to `main` or run the workflow manually.
+
+2) App Runner (container via ECR)
+- A `Dockerfile`, `.dockerignore`, and `buildspec.yml` are provided for building and pushing an image to ECR using CodeBuild.
+- Create an ECR repo, update CodeBuild environment variables `IMAGE_REPO_NAME` (your repo name) and region.
+- Point CodeBuild to this repo and `buildspec.yml`. After push, create an App Runner service from ECR (port 8080, start command provided by image).
+
+Health check: `GET /health` returns `{ "status": "ok" }`.
 
 ## Troubleshooting
 
