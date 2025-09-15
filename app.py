@@ -1,9 +1,10 @@
+import os
 import pickle
 from flask import Flask, request, jsonify, render_template, url_for, flash
 import numpy as np
 
-app = Flask(__name__)
-app.secret_key = "change-this-secret"  # TODO: use env var in production
+app = Flask(__name__, template_folder='Templates', static_folder='static')
+app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret")
 
 # Load the model artifacts
 with open("regression.pkl", "rb") as f:
@@ -32,6 +33,10 @@ FEATURES = [
 @app.route("/")
 def home():
     return render_template("home.html", prediction=None, form_values={})
+
+@app.route("/health")
+def health():
+    return {"status": "ok"}
 
 
 @app.route("/predict_api", methods=["POST"])

@@ -1,0 +1,58 @@
+name: Deploy to Elastic Beanstalk
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: eb-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EB_APP_NAME: ${{ secrets.EB_APP_NAME }}
+  EB_ENV_NAME: ${{ secrets.EB_ENV_NAME }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python (for optional build steps)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create deployment package
+        run: |
+          zip -r app.zip . \
+            -x ".git/*" \
+               ".venv/*" \
+               "__pycache__/*" \
+               ".ipynb_checkpoints/*" \
+               ".github/*"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ env.EB_APP_NAME }}
+          environment_name: ${{ env.EB_ENV_NAME }}
+          region: ${{ env.AWS_REGION }}
+          version_label: v-${{ github.run_number }}-${{ github.sha }}
+          deployment_package: app.zip
