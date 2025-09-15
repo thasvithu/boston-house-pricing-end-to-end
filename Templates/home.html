@@ -1,11 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Hello World!</h1>
-</body>
-</html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Boston House Price Prediction</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    </head>
+    <body>
+        <header class="site-header">
+            <div class="container">
+                <h1>Boston House Price Prediction</h1>
+                <p class="subtitle">Enter property attributes to estimate the median house value.</p>
+            </div>
+        </header>
+
+        <main class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alerts">
+                        {% for category, message in messages %}
+                            <div class="alert {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <section class="card">
+                <form action="{{ url_for('predict') }}" method="POST" class="grid-form" novalidate>
+                    {% set fv = form_values or {} %}
+
+                    <!-- Feature inputs -->
+                    {% set fields = [
+                        ("CRIM", "Per capita crime rate by town"),
+                        ("ZN", "Proportion of residential land zoned for lots over 25,000 sq.ft."),
+                        ("INDUS", "Proportion of non-retail business acres per town"),
+                        ("CHAS", "Charles River dummy variable (1 if tract bounds river; 0 otherwise)"),
+                        ("NOX", "Nitric oxides concentration (parts per 10 million)"),
+                        ("RM", "Average number of rooms per dwelling"),
+                        ("AGE", "Proportion of owner-occupied units built prior to 1940"),
+                        ("DIS", "Weighted distances to five Boston employment centres"),
+                        ("RAD", "Index of accessibility to radial highways"),
+                        ("TAX", "Full-value property-tax rate per $10,000"),
+                        ("PTRATIO", "Pupil–teacher ratio by town"),
+                        ("B", "1000(Bk - 0.63)^2 where Bk is proportion of blacks by town"),
+                        ("LSTAT", "% lower status of the population")
+                    ] %}
+
+                    {% for name, label in fields %}
+                        <div class="form-field">
+                            <label for="{{ name }}">{{ label }}</label>
+                            <input
+                                type="number"
+                                id="{{ name }}"
+                                name="{{ name }}"
+                                step="any"
+                                required
+                                value="{{ fv.get(name, '') }}"
+                                placeholder="Enter {{ name }}"
+                            />
+                        </div>
+                    {% endfor %}
+
+                    <div class="actions">
+                        <button class="btn" type="submit">Predict Price</button>
+                        <button class="btn secondary" type="reset">Reset</button>
+                    </div>
+                </form>
+            </section>
+
+            {% if prediction is not none %}
+                <section class="card result">
+                    <h2>Estimated Median Value</h2>
+                    <p class="prediction">${{ '%.2f'|format(prediction) }}k</p>
+                    <p class="hint">This estimate is based on the provided features using a trained regression model.</p>
+                </section>
+            {% endif %}
+        </main>
+
+        <footer class="site-footer">
+            <div class="container">
+                <span>Built with Flask · Boston Housing Dataset</span>
+            </div>
+        </footer>
+    </body>
+    </html>
